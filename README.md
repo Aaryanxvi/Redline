@@ -1,11 +1,8 @@
 # Gear — a gearbox for Claude Code
 
-Switch Claude Code models like shifting gears. Two PowerShell tools for Windows:
+Switch Claude Code models like shifting gears. A draggable H-pattern shifter (`shift-gui.ps1`) that lives on top of your desktop: drag the knob into a gate to send `/model <x>` to your Claude terminal. Includes a tachometer, a **fuel gauge** (context window remaining), **effort toggles** (`/effort low|medium|high|xhigh`), a **NOS button** (`/fast` toggle), and live **usage bars** (5-hour + weekly rate-limit utilization).
 
-- **`shift-gui.ps1`** — a draggable H-pattern shifter that lives on top of your desktop. Drag the knob into a gate to send `/model <x>` to your Claude terminal. Includes a tachometer, a **fuel gauge** (context window remaining), **effort toggles** (`/effort low|medium|high|xhigh`), a **NOS button** (`/fast` toggle), and live **usage bars** (5-hour + weekly rate-limit utilization).
-- **`shift.ps1`** — a plain CLI menu. Pick a gear, launches `claude` straight into that model.
-
-Both are single-file scripts. No dependencies beyond Windows PowerShell and the Claude Code CLI.
+Single-file script. No dependencies beyond Windows PowerShell and the Claude Code CLI.
 
 ## Requirements
 
@@ -14,8 +11,6 @@ Both are single-file scripts. No dependencies beyond Windows PowerShell and the 
 - Windows PowerShell 5.1 (ships with Windows)
 
 ## Usage
-
-### GUI shifter
 
 ```powershell
 powershell -sta -File shift-gui.ps1
@@ -26,13 +21,6 @@ powershell -sta -File shift-gui.ps1
 3. **Fuel gauge** reads context remaining from the session transcript. **Effort levers** (left) send `/effort`. **NOS** (`/fast`) toggles fast mode. **5H / WK bars** (right) show usage-limit utilization from the Claude usage API.
 
 `-sta` is required (WinForms needs a single-threaded apartment).
-
-### CLI shifter
-
-```powershell
-.\shift.ps1        # pick a gear from the menu
-.\shift.ps1 3      # skip the menu, launch straight into gear 3
-```
 
 ## Gears
 
