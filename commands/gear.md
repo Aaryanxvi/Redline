@@ -5,7 +5,14 @@ allowed-tools: Bash(powershell:*), Bash(bash:*)
 
 Launch the Gearbox shifter, detached, so it keeps running independently of this session.
 
-- On Windows, run: `powershell -Command "Start-Process powershell -ArgumentList '-sta','-WindowStyle','Hidden','-File','C:\path\to\Gearbox\shift-gui.ps1'"` (edit the path to where you cloned the repo). If a window titled "MODEL SHIFT" already exists, say so instead of launching a second copy.
-- On macOS/Linux, the GUI is Windows-only. Tell the user to open a new terminal and run `./gear.sh` from the repo to launch claude in a chosen gear (`./gear.sh 3 xhigh` for gear + effort). Inside an already-running session, `/model` and `/effort` are the gears.
+**Windows** — run this, editing the path to where you cloned the repo:
 
-After launching, confirm in one short line. Do not do anything else.
+```
+powershell -Command "if (Get-Process powershell -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -eq 'MODEL SHIFT' }) { 'already running' } else { Start-Process powershell -ArgumentList '-sta','-WindowStyle','Hidden','-File','C:\path\to\Gearbox\shift-gui.ps1'; 'launched' }"
+```
+
+The guard skips launching if a "MODEL SHIFT" window is already open. Report whether it launched or was already running, in one short line.
+
+**macOS / Linux** — the GUI is Windows-only. Tell the user to open a new terminal and run `./gear.sh` from the repo (`./gear.sh 5 xhigh` for gear + effort). Inside a running session, `/model` and `/effort` are the gears.
+
+Do nothing else.
