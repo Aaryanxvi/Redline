@@ -1,16 +1,13 @@
 # Gear — a gearbox for Claude Code
 
-Switch Claude Code models like shifting gears. A draggable H-pattern shifter (`shift-gui.ps1`) that lives on top of your desktop: drag the knob into a gate to send `/model <x>` to your Claude terminal. Includes a tachometer, a **fuel gauge** (context window remaining), **effort toggles** (`/effort low|medium|high|xhigh`), a **NOS button** (`/fast` toggle), and live **usage bars** (5-hour + weekly rate-limit utilization).
+Switch Claude Code models like shifting gears.
 
-Single-file script. No dependencies beyond Windows PowerShell and the Claude Code CLI.
+- **Windows** — `shift-gui.ps1`: a draggable H-pattern shifter that lives on top of your desktop. Drag the knob into a gate to send `/model <x>` to your Claude terminal. Includes a tachometer, a **fuel gauge** (context window remaining), **effort toggles** (`/effort low|medium|high|xhigh`), a **NOS button** (`/fast` toggle), and live **usage bars** (5-hour + weekly rate-limit utilization).
+- **macOS / Linux** — `gear.sh`: a terminal gearbox. Pick a gear, it launches `claude` in that model (optionally with an effort level). Inside a running session, `/model` and `/effort` are your gears.
 
-## Requirements
+Single-file scripts. No dependencies beyond the Claude Code CLI (and PowerShell 5.1 on Windows, which ships with it).
 
-- Windows (uses WinForms + `user32.dll`)
-- [Claude Code](https://claude.com/claude-code) CLI on your PATH
-- Windows PowerShell 5.1 (ships with Windows)
-
-## Usage
+## Usage — Windows GUI
 
 ```powershell
 powershell -sta -File shift-gui.ps1
@@ -21,6 +18,19 @@ powershell -sta -File shift-gui.ps1
 3. **Fuel gauge** reads context remaining from the session transcript. **Effort levers** (left) send `/effort`. **NOS** (`/fast`) toggles fast mode. **5H / WK bars** (right) show usage-limit utilization from the Claude usage API.
 
 `-sta` is required (WinForms needs a single-threaded apartment).
+
+## Usage — macOS / Linux terminal
+
+```bash
+chmod +x gear.sh
+./gear.sh          # interactive menu
+./gear.sh 3        # straight into gear 3 (Sonnet 5 1M)
+./gear.sh 5 xhigh  # Fable 5 at xhigh effort
+```
+
+## Launch from inside Claude Code
+
+Copy `commands/gear.md` to `~/.claude/commands/` and edit the script path inside it. Then `/gear` in any session launches the shifter.
 
 ## Gears
 
