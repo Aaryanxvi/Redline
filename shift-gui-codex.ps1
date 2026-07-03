@@ -121,14 +121,24 @@ function Send-Keys-To-Target([string]$text) {
   if ($script:target -eq [IntPtr]::Zero) { $script:statusLbl.Text='SET TARGET FIRST'; return $false }
   if ([WinC]::IsIconic($script:target)) { [WinC]::ShowWindow($script:target,9) | Out-Null }
   [WinC]::SetForegroundWindow($script:target) | Out-Null
-  Start-Sleep -Milliseconds 250
+  Start-Sleep -Milliseconds 300
   $script:lastCmd = $text
-  $esc = $text -replace '([+^%~(){}\[\]])','{$1}'
-  [Windows.Forms.SendKeys]::SendWait($esc)
-  Start-Sleep -Milliseconds 180
-  [Windows.Forms.SendKeys]::SendWait('{ENTER}')
-  Start-Sleep -Milliseconds 120
-  [Windows.Forms.SendKeys]::SendWait('{ENTER}')
+  # Codex slash commands: blasting the whole "/model x" line + double-Enter landed
+  # as a chat message (command mode never armed). Send "/" ALONE first, pause so the
+  # command palette opens, THEN type the rest, then ONE Enter.
+  if ($text.StartsWith('/')) {
+    [Windows.Forms.SendKeys]::SendWait('/')
+    Start-Sleep -Milliseconds 350
+    $rest = ($text.Substring(1)) -replace '([+^%~(){}\[\]])','{$1}'
+    [Windows.Forms.SendKeys]::SendWait($rest)
+    Start-Sleep -Milliseconds 250
+    [Windows.Forms.SendKeys]::SendWait('{ENTER}')
+  } else {
+    $esc = $text -replace '([+^%~(){}\[\]])','{$1}'
+    [Windows.Forms.SendKeys]::SendWait($esc)
+    Start-Sleep -Milliseconds 180
+    [Windows.Forms.SendKeys]::SendWait('{ENTER}')
+  }
   return $true
 }
 
@@ -534,15 +544,10 @@ $eff.Add_Paint({
   }
 })
 $eff.Add_MouseUp({
-  $i = [math]::Floor($_.Y/24)
-  if ($i -lt 0 -or $i -gt 3) { return }
-  $lv = $script:effLevels[$i]
-  if ($script:effort -eq $lv.cmd) { return }
-  if (Send-Keys-To-Target "/reasoning $($lv.cmd)") {
-    $script:effort = $lv.cmd
-    $eff.Invalidate()
-    if ($script:dash) { $script:dash.Invalidate() }
-  }
+  # Codex has no /reasoning command -- reasoning is chosen inside the /model picker.
+  # Levers are inert until we wire that up; clicking just flags the status line.
+  $script:statusLbl.Text = 'EFFORT: set via /model picker in codex'
+  $script:statusLbl.ForeColor = [Drawing.Color]::FromArgb(200,180,90)
 })
 $f.Controls.Add($eff)
 

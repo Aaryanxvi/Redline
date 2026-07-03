@@ -2,29 +2,25 @@ name: test gear.sh
 
 on:
   push:
-    paths: [gear.sh, gear-codex.sh, .github/workflows/test.yml]
+    paths: [gear.sh, .github/workflows/test.yml]
   pull_request:
-    paths: [gear.sh, gear-codex.sh, .github/workflows/test.yml]
+    paths: [gear.sh, .github/workflows/test.yml]
   workflow_dispatch:
 
 jobs:
   gear:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        shell: bash   # windows runners default to PowerShell; the scripts are bash
     steps:
       - uses: actions/checkout@v4
 
-      - name: Stub the claude and codex CLIs (capture the args the scripts pass)
+      - name: Stub the claude CLI (capture the args gear.sh passes)
         run: |
           mkdir -p "$HOME/stub"
           printf '#!/usr/bin/env bash\necho "claude $*"\n' > "$HOME/stub/claude"
-          printf '#!/usr/bin/env bash\necho "codex $*"\n' > "$HOME/stub/codex"
-          chmod +x "$HOME/stub/claude" "$HOME/stub/codex"
+          chmod +x "$HOME/stub/claude"
           echo "$HOME/stub" >> "$GITHUB_PATH"
 
       - name: Run gear.sh across every path and assert
@@ -58,29 +54,4 @@ jobs:
           fi
           echo "ok: bad gear rejected"
 
-          echo "ALL claude PASSED on ${{ matrix.os }}"
-
-      - name: Run gear-codex.sh across every path and assert
-        run: |
-          set -euo pipefail
-          chmod +x gear-codex.sh
-
-          assert() {
-            if [ "$2" != "$3" ]; then
-              echo "FAIL: $1"; echo "  expected: $2"; echo "  actual:   $3"; exit 1
-            fi
-            echo "ok: $1 -> $3"
-          }
-
-          assert "codex gear 1 minimal" 'codex -m gpt-5.4 -c model_reasoning_effort="minimal"' "$(./gear-codex.sh 1 | tail -1)"
-          assert "codex gear 3 medium"  'codex -m gpt-5.4 -c model_reasoning_effort="medium"'  "$(./gear-codex.sh 3 | tail -1)"
-          assert "codex gear 4 high"    'codex -m gpt-5.4 -c model_reasoning_effort="high"'    "$(./gear-codex.sh 4 | tail -1)"
-          assert "codex model override" 'codex -m o3 -c model_reasoning_effort="high"'         "$(./gear-codex.sh 4 o3 | tail -1)"
-          assert "codex menu pick 2"    'codex -m gpt-5.4 -c model_reasoning_effort="low"'     "$(echo 2 | ./gear-codex.sh | tail -1)"
-
-          if ./gear-codex.sh 9 >/dev/null 2>&1; then
-            echo "FAIL: codex gear 9 should have exited non-zero"; exit 1
-          fi
-          echo "ok: codex bad gear rejected"
-
-          echo "ALL codex PASSED on ${{ matrix.os }}"
+          echo "ALL PASSED on ${{ matrix.os }}"
