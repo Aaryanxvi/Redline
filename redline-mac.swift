@@ -1,4 +1,4 @@
-// gearbox-mac.swift - MODEL SHIFT for Claude Code on macOS
+// redline-mac.swift - REDLINE for Claude Code on macOS
 // Native AppKit port of shift-gui.ps1. Draggable H-pattern shifter; drag the knob
 // into a gate -> writes "/model <x>" into your frontmost terminal via the terminal's
 // own AppleScript API (iTerm2 `write text` / Terminal.app `do script`). No keystroke
@@ -6,7 +6,7 @@
 // newest ~/.claude session jsonl). Effort levers -> /effort. NOS -> /fast.
 // Usage bars -> 5-hour + weekly limits (OAuth usage endpoint; token from Keychain).
 //
-// Run:  swift gearbox-mac.swift      (needs Xcode Command Line Tools: xcode-select --install)
+// Run:  swift redline-mac.swift      (needs Xcode Command Line Tools: xcode-select --install)
 
 import Cocoa
 
@@ -205,7 +205,7 @@ func drawGlow(_ s: String, _ x: CGFloat, _ y: CGFloat, _ size: CGFloat, _ color:
 }
 
 // ================= the whole GUI is one flipped view =================
-class GearboxView: NSView {
+class RedlineView: NSView {
     var knob = NEUT
     var dragging = false
     override var isFlipped: Bool { true }   // top-left origin, matches the Windows port
@@ -221,7 +221,7 @@ class GearboxView: NSView {
 
         // ---- header ----
         C(220,70,70).setFill(); NSBezierPath(ovalIn: NSRect(x:10,y:10,width:8,height:8)).fill()
-        drawText("MODEL SHIFT", 24, 6, 12, C(190,190,198))
+        drawText("REDLINE", 24, 6, 12, C(190,190,198))
 
         // ---- target readout ----
         drawText(targetLabel, 20, 30, 9, C(120,230,150))
@@ -432,12 +432,12 @@ let panel = NSPanel(
     contentRect: NSRect(x: 60, y: 200, width: 240, height: 640),
     styleMask: [.titled, .closable, .nonactivatingPanel, .utilityWindow],
     backing: .buffered, defer: false)
-panel.title = "MODEL SHIFT"
+panel.title = "REDLINE"
 panel.level = .floating
 panel.isFloatingPanel = true
 panel.hidesOnDeactivate = false
 
-let view = GearboxView(frame: NSRect(x: 0, y: 0, width: 240, height: 640))
+let view = RedlineView(frame: NSRect(x: 0, y: 0, width: 240, height: 640))
 panel.contentView = view
 panel.makeKeyAndOrderFront(nil)
 

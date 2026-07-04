@@ -1,32 +1,32 @@
-# 🏎️ Gearbox
+# 🏎️ Redline
 
-Gearbox is a physical gear-shifter for Claude Code. It's a floating H-pattern shifter that drives `/model`, `/effort`, and `/fast` in a running session — plus live instrumentation: a fuel gauge for the context window and utilization bars for your rate limits. Switch models by dragging a stick, not by typing.
+Redline is a physical gear-shifter for Claude Code. It's a floating H-pattern shifter that drives `/model`, `/effort`, and `/fast` in a running session — plus live instrumentation: a fuel gauge for the context window and utilization bars for your rate limits. Switch models by dragging a stick, not by typing.
 
 - **`shift-gui.ps1`** — **Windows** GUI (PowerShell + WinForms). Types the command into your terminal.
-- **`gearbox-mac.swift`** — **macOS** GUI (Swift + AppKit). Writes the command through the terminal's own AppleScript API (iTerm2 / Terminal.app) — no keystroke injection, no Accessibility prompt.
+- **`redline-mac.swift`** — **macOS** GUI (Swift + AppKit). Writes the command through the terminal's own AppleScript API (iTerm2 / Terminal.app) — no keystroke injection, no Accessibility prompt.
 
-> A Codex CLI version is in progress on the [`experimental`](https://github.com/Aaryanxvi/GEarbox/tree/experimental) branch.
+> A Codex CLI version is in progress on the [`experimental`](https://github.com/Aaryanxvi/Redline/tree/experimental) branch.
 
 <p align="center">
-  <img src="dashboard.png" alt="Gearbox dashboard: H-pattern shifter, tachometer, fuel gauge, effort levers, NOS button, and usage bars" width="300">
+  <img src="dashboard.png" alt="Redline dashboard: H-pattern shifter, tachometer, fuel gauge, effort levers, NOS button, and usage bars" width="300">
 </p>
 
 ## 🚦 Quickstart
 
 ```powershell
-git clone https://github.com/Aaryanxvi/GEarbox.git
-cd GEarbox
+git clone https://github.com/Aaryanxvi/Redline.git
+cd Redline
 powershell -sta -File shift-gui.ps1
 ```
 
-Click your Claude Code terminal once so Gearbox locks onto it (shown under `TARGET`), then drag the stick into a gate. That's it.
+Click your Claude Code terminal once so Redline locks onto it (shown under `TARGET`), then drag the stick into a gate. That's it.
 
 ## ⚙️ How it works
 
-Gearbox never talks to Claude directly. It targets a terminal window and types into it, exactly as if you'd typed the slash command yourself:
+Redline never talks to Claude directly. It targets a terminal window and types into it, exactly as if you'd typed the slash command yourself:
 
-- **Targeting** — a focus poller (`user32.dll` `GetForegroundWindow`) tracks the last non-Gearbox window you touched. That window is the target; switching between terminals re-targets automatically.
-- **Injection** — on a shift, Gearbox foregrounds the target (restoring it only if minimized, never resizing it) and sends the command via `SendKeys` + Enter.
+- **Targeting** — a focus poller (`user32.dll` `GetForegroundWindow`) tracks the last non-Redline window you touched. That window is the target; switching between terminals re-targets automatically.
+- **Injection** — on a shift, Redline foregrounds the target (restoring it only if minimized, never resizing it) and sends the command via `SendKeys` + Enter.
 - **Fuel gauge** — reads the target session's transcript under `~/.claude/projects`, sums the newest `usage` entry (`input + cache_creation + cache_read + output`), and renders it against the model's context window (200K for Haiku, 1M for everything else; the 33K autocompact buffer is subtracted for Sonnet to match `/context`).
 - **Usage bars** — call the same OAuth `usage` endpoint the CLI uses, with the token from `~/.claude/.credentials.json`. Cached for 5 minutes, fetched off-thread so the UI never blocks.
 
@@ -36,7 +36,7 @@ Nothing leaves your machine. No dependencies beyond PowerShell 5.1 (ships with W
 
 ### Windows (GUI)
 
-Clone or [download the ZIP](https://github.com/Aaryanxvi/GEarbox/archive/refs/heads/main.zip), then run:
+Clone or [download the ZIP](https://github.com/Aaryanxvi/Redline/archive/refs/heads/main.zip), then run:
 
 ```powershell
 powershell -sta -File shift-gui.ps1
@@ -51,14 +51,14 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ### macOS (GUI)
 
 ```bash
-swift gearbox-mac.swift
+swift redline-mac.swift
 ```
 
 Needs Xcode Command Line Tools (`xcode-select --install`) — the one dependency, the way PowerShell is on Windows. Same shifter, drawn natively with AppKit. Instead of injecting keystrokes it writes the command through the terminal's own scripting interface: iTerm2's `write text` or Terminal.app's `do script`. Run Claude Code in **iTerm2 or Terminal.app**, keep that terminal frontmost, and drag the stick. (New — give it a run and open an issue if anything misbehaves.)
 
 ### Launch with `/gear` from inside Claude Code
 
-Type `/gear` in any Claude Code session to pop the shifter open. Two one-time steps to install it — the command finds the repo through a `GEARBOX_DIR` environment variable, so there's no path to hand-edit.
+Type `/gear` in any Claude Code session to pop the shifter open. Two one-time steps to install it — the command finds the repo through a `REDLINE_DIR` environment variable, so there's no path to hand-edit.
 
 **Windows (PowerShell):**
 
@@ -68,7 +68,7 @@ mkdir $HOME\.claude\commands -Force
 copy commands\gear.md $HOME\.claude\commands\
 
 # 2. tell it where the repo is (persists across sessions)
-setx GEARBOX_DIR "$PWD"
+setx REDLINE_DIR "$PWD"
 ```
 
 **macOS / Linux:**
@@ -79,7 +79,7 @@ mkdir -p ~/.claude/commands
 cp commands/gear.md ~/.claude/commands/
 
 # 2. tell it where the repo is (add to ~/.zshrc or ~/.bashrc to persist)
-echo "export GEARBOX_DIR=\"$PWD\"" >> ~/.zshrc
+echo "export REDLINE_DIR=\"$PWD\"" >> ~/.zshrc
 ```
 
 Restart Claude Code, then `/gear` launches the shifter (Windows/macOS) with a guard that won't spawn a second copy.
@@ -93,6 +93,8 @@ Restart Claude Code, then `/gear` launches the shifter (Windows/macOS) with a gu
 | NOS bottle | `/fast` | Toggles fast mode |
 | Tachometer / fuel gauge | — | Context window remaining |
 | 5H / WK bars (right) | — | 5-hour and weekly rate-limit utilization |
+
+Every control has a sound: a recorded shifter clunk on a gear change, a button click on the effort levers, and a pressurized-gas hiss on the NOS bottle.
 
 ### 🕹️ Gears
 
@@ -108,7 +110,8 @@ Restart Claude Code, then `/gear` launches the shifter (Windows/macOS) with a gu
 ## 📦 What's inside
 
 - `shift-gui.ps1` — the Windows GUI. Single file, WinForms, no dependencies.
-- `gearbox-mac.swift` — the macOS GUI. Single file, AppKit, needs Xcode CLT.
+- `redline-mac.swift` — the macOS GUI. Single file, AppKit, needs Xcode CLT.
+- `gear-shift.wav`, `switch-click.wav` — the shifter and switch sound samples.
 - `commands/gear.md` — the `/gear` slash command for Claude Code.
 
 ## ⚠️ Notes & limitations

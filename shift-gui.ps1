@@ -1,4 +1,4 @@
-# shift-gui.ps1 - MODEL SHIFT for Claude Code on Windows
+# shift-gui.ps1 - REDLINE for Claude Code on Windows
 # Draggable H-pattern shifter. Drag knob into a gate -> sends "/model <x>" to your claude terminal.
 # NITRO button -> "/fast" (fast-mode toggle). Fuel gauge = context remaining (reads newest session jsonl).
 # Run:  powershell -sta -File shift-gui.ps1
@@ -288,7 +288,7 @@ function Get-Fuel {
 
 # ================= form =================
 $f = New-Object Windows.Forms.Form
-$f.Text='MODEL SHIFT'; $f.ClientSize = New-Object Drawing.Size(240, 640)
+$f.Text='REDLINE'; $f.ClientSize = New-Object Drawing.Size(240, 640)
 $f.TopMost=$true; $f.FormBorderStyle='FixedToolWindow'
 $f.StartPosition='Manual'; $f.Location = New-Object Drawing.Point(40,40)
 
@@ -301,7 +301,7 @@ $f.Add_Paint({
   $g.FillEllipse((New-Object Drawing.SolidBrush([Drawing.Color]::FromArgb(220,70,70))),10,10,8,8)
   $g.FillEllipse((New-Object Drawing.SolidBrush([Drawing.Color]::FromArgb(120,255,120,120))),11,11,3,3)
   $tf = New-Object Drawing.Font('Consolas',9,[Drawing.FontStyle]::Bold)
-  $g.DrawString('MODEL SHIFT',$tf,(New-Object Drawing.SolidBrush([Drawing.Color]::FromArgb(190,190,198))),24,8)
+  $g.DrawString('REDLINE',$tf,(New-Object Drawing.SolidBrush([Drawing.Color]::FromArgb(190,190,198))),24,8)
 })
 
 $script:statusLbl = New-Object Windows.Forms.Label
