@@ -153,11 +153,76 @@ function Lock-FuelFile([string]$cmdArg) {
   return $false
 }
 
+# ---- procedural sound: 16-bit PCM WAVs synthesized in memory, no asset files ----
+# Build-Wav runs a generator (t, rnd) -> sample [-1,1] over $dur seconds and
+# packs a WAV. A click/switch/hiss are broadband transients, not tones, so
+# [console]::Beep can't make them -- we build the waveform sample by sample.
+$twoPi = 2 * [math]::PI
+function Build-Wav([double]$dur, [scriptblock]$gen) {
+  $rate = 44100; $n = [int]($rate * $dur)
+  $ms = New-Object IO.MemoryStream
+  $bw = New-Object IO.BinaryWriter $ms
+  $dataLen = $n * 2
+  # pass GetBytes() directly to Write() -- a scriptblock return would unroll the
+  # byte[] into loose objects and hit the wrong Write overload (corrupt header).
+  $bw.Write([Text.Encoding]::ASCII.GetBytes('RIFF')); $bw.Write([int](36+$dataLen)); $bw.Write([Text.Encoding]::ASCII.GetBytes('WAVE'))
+  $bw.Write([Text.Encoding]::ASCII.GetBytes('fmt ')); $bw.Write([int]16); $bw.Write([int16]1); $bw.Write([int16]1)
+  $bw.Write([int]$rate); $bw.Write([int]($rate*2)); $bw.Write([int16]2); $bw.Write([int16]16)
+  $bw.Write([Text.Encoding]::ASCII.GetBytes('data')); $bw.Write([int]$dataLen)
+  $rnd = New-Object Random
+  for ($i=0; $i -lt $n; $i++) {
+    $t = $i / $rate
+    $s = & $gen $t $rnd
+    if ($s -gt 1) { $s = 1 } elseif ($s -lt -1) { $s = -1 }
+    $bw.Write([int16]($s * 30000))
+  }
+  $bw.Flush()
+  return $ms.ToArray()
+}
+
+# voice generators: t = seconds since attack, r = Random for noise
+$script:sfxVoices = @{
+  # gear shift: the real recorded shifter clunk (decoded MP3 -> 16-bit WAV,
+  # trimmed + normalized). A 664ms multi-transient mechanical sound no handful
+  # of oscillators reproduces, so we play the sample itself.
+  click  = @{ file = 'gear-shift.wav' }
+  # effort lever: real recorded button click (decoded MP3 -> 16-bit WAV,
+  # spectral-gated, isolated to the click + its ring, trimmed).
+  switch = @{ file = 'switch-click.wav' }
+  # NOS purge: pressurized gas -- broadband noise, sharp attack, long decay tail
+  nos    = @{ dur = 0.5; gen = {
+    param($t,$r)
+    $env = if ($t -lt 0.006) { $t/0.006 } else { [math]::Exp(-($t-0.006)*6) }
+    ($r.NextDouble()-0.5) * 2 * $env * 0.3
+  }}
+}
+$script:sfxPlayers = @{}
+
+function Play-Sfx([string]$name) {
+  # SoundPlayer.Play() streams on a background thread -- never blocks the UI.
+  try {
+    if (-not $script:sfxPlayers[$name]) {
+      $v = $script:sfxVoices[$name]
+      $p = New-Object Media.SoundPlayer
+      if ($v.file) {
+        # sample on disk, next to the script; SoundPlayer needs 16-bit PCM WAV
+        $p.SoundLocation = Join-Path $PSScriptRoot $v.file
+      } else {
+        $p.Stream = New-Object IO.MemoryStream (,(Build-Wav $v.dur $v.gen))
+      }
+      $p.Load()
+      $script:sfxPlayers[$name] = $p
+    }
+    $script:sfxPlayers[$name].Play()
+  } catch {}
+}
+
 function Engage-Gear($g) {
   # re-shift into same gear still re-sends when fuel is unlocked -- that's how
   # you re-bind the gauge to a different terminal without changing model
   if ($script:curGear -eq $g.id -and $script:fuelFile) { return }
   if (Send-Keys-To-Target "/model $($g.cmd)") {
+    Play-Sfx 'click'
     $script:curGear  = $g.id
     $script:curLimit = Get-Tank $g.cmd
     Start-Sleep -Milliseconds 900          # give target session time to log the command
@@ -637,6 +702,7 @@ $eff.Add_MouseUp({
   $lv = $script:effLevels[$i]
   if ($script:effort -eq $lv.cmd) { return }
   if (Send-Keys-To-Target "/effort $($lv.cmd)") {
+    Play-Sfx 'switch'
     $script:effort = $lv.cmd
     $eff.Invalidate()
     if ($script:dash) { $script:dash.Invalidate() }   # breadcrumb shows last cmd
@@ -756,6 +822,7 @@ $nos.Add_MouseUp({
   # ponytail: nitro LED tracks flips relative to itself; if it ever drifts from
   # the real state the toggle still flips correctly, only the light reads wrong.
   if (Send-Keys-To-Target '/fast' '{DOWN}') {
+    Play-Sfx 'nos'
     $script:nitro = -not $script:nitro
     $script:purge = 8                    # spray burst animation
     $nos.Invalidate()
